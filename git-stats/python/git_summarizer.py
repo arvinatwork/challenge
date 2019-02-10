@@ -33,10 +33,10 @@ class GitSummaryCSVPrinter:
             self.__print_info(info)
 
     def __print_header(self):
-        print("{0}, {1}, {2}, {3}".format("Name", "Clone URL", "Date of Latest Commit", "Author of Latest Commit"))
+        print("{0},{1},{2},{3}".format("Name", "Clone URL", "Date of Latest Commit", "Author of Latest Commit"))
 
     def __print_info(self, info):
-        print("{0}, {1}, {2}, {3}".format(info.name, info.clone_url, info.latest_commit_date, info.latest_commit_author))
+        print("{0},{1},{2},{3}".format(info.name, info.clone_url, info.latest_commit_date, info.latest_commit_author))
 
 
 class GitSummarizer:
@@ -87,7 +87,7 @@ class GitSummarizer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get some git repo summaries.')
     parser.add_argument('repositories', type=str, nargs='+',
-                        help='repositories with format $org/$name, e.g. facebook/react')
+                        help='repositories with format $org/$name separated by space, e.g. facebook/react google/clusterfuzz')
 
     args = parser.parse_args()
 
