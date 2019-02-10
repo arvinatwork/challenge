@@ -1,4 +1,5 @@
 import requests
+import argparse
 
 def repo_summary(repo_lists):
     print(repo_lists)
@@ -35,4 +36,10 @@ def repo_summary(repo_lists):
 
 
 if __name__ == "__main__":
-    repo_summary(["facebook/react", "toddmotto/public-apis"])
+    parser = argparse.ArgumentParser(description='Get some git repo summaries.')
+    parser.add_argument('repositories', type=str, nargs='+',
+                        help='repositories with format $org/$name, e.g. facebook/react')
+
+    args = parser.parse_args()
+
+    repo_summary(args.repositories)
