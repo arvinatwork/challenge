@@ -1,39 +1,88 @@
 import requests
 import argparse
 
-def repo_summary(repo_lists):
-    print(repo_lists)
+class GitSummaryInfo:
+
+    def __init__(self, name="", clone_url="", latest_commit_date="", latest_commit_author=""):
+        self.name = name
+        self.clone_url = clone_url
+        self.latest_commit_date = latest_commit_date,
+        self.latest_commit_author = latest_commit_author
+
+    def set_name(self, name):
+        self.name = name
+
+    def set_clone_url(self, clone_url):
+        self.clone_url = clone_url
+
+    def set_latest_commit_date(self, latest_commit_date):
+        self.latest_commit_date = latest_commit_date
+
+    def set_latest_commit_author(self, latest_commit_author):
+        self.latest_commit_author = latest_commit_author
 
 
-    for repo in repo_lists:
-        url = "https://api.github.com/repos/" + repo
+class GitSummaryCSVPrinter:
 
-        headers = {'Accept': 'application/vnd.github.v3+json'}
-        response = requests.get(url, headers=headers)
+    def __init__(self, git_summaries):
+        self.git_summaries = git_summaries
 
-        # TODO add apierror handling
-        # if response.status_code != 200:
-            # This means something went wrong.
-            # raise ApiError('GET /repos {}'.format(resp.status_code))
-        # print(response.json())
+    def start(self):
+        self.__print_header()
+        for info in self.git_summaries:
+            self.__print_info(info)
 
-        resp_json = response.json()
+    def __print_header(self):
+        print("{0}, {1}, {2}, {3}".format("Name", "Clone URL", "Date of Latest Commit", "Author of Latest Commit"))
 
-        # TODO Create Print Object
-        print("Name: " + resp_json['name'])
-        print("Clone URL: " + resp_json['clone_url'])
-        print("SSH URL: " + resp_json['ssh_url'])
+    def __print_info(self, info):
+        print("{0}, {1}, {2}, {3}".format(info.name, info.clone_url, info.latest_commit_date, info.latest_commit_author))
 
-        # TODO extract 
-        commits_url = url + "/commits"
-        commits_resp = requests.get(commits_url, headers=headers)
-        commits_resp_json = commits_resp.json()
- 
-        print("Date: " + commits_resp_json[0]['commit']['author']['date'])
-        print("Latest commit: " + commits_resp_json[0]['commit']['message'])
-        print("SHA: " + commits_resp_json[0]['sha'])
-        print("Author: " + commits_resp_json[0]['commit']['author']['name'])
 
+class GitSummarizer:
+
+    def __init__(self, repositories):
+        self.repositories = repositories
+        self.headers = {'Accept': 'application/vnd.github.v3+json'}
+        self.base_url = "https://api.github.com/repos/"
+
+    def process(self):
+        summaries = []
+
+        for repo in self.repositories:
+            git_summary = GitSummaryInfo()
+            repo_info = self.__get_repo(repo)
+            commits_info = self.__get_commits(repo)
+            first_commit = commits_info[0]['commit']
+
+            git_summary.set_name(repo_info['name'])
+            git_summary.set_clone_url(repo_info['clone_url'])
+            git_summary.set_latest_commit_date(first_commit['author']['date'])
+            git_summary.set_latest_commit_author(first_commit['author']['name'])
+
+            summaries.append(git_summary)
+
+        self.__print(summaries)
+
+    def __print(self, summaries):
+        printer = GitSummaryCSVPrinter(summaries)
+        printer.start()
+
+    def __get_repo(self, repo):
+        # TODO add exception handling
+        repo_url = self.base_url + repo
+        resp = self.__request(repo_url)
+        return resp.json()
+
+    def __get_commits(self, repo):
+        # TODO add exception handling
+        commits_url = self.base_url + repo + "/commits"
+        resp = self.__request(commits_url)
+        return resp.json()
+
+    def __request(self, url):
+        return requests.get(url, headers=self.headers)
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get some git repo summaries.')
@@ -42,4 +91,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    repo_summary(args.repositories)
+    summary = GitSummarizer(args.repositories)
+    summary.process()
