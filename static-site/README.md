@@ -1,0 +1,1 @@
+Create a index in kibana after loading the site
